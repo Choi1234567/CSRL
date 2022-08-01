@@ -1,5 +1,6 @@
 import random
-from collections import deque, defaultdict, namedtuple
+from collections import deque, namedtuple
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -8,6 +9,7 @@ import torch.optim as optim
 
 MINVALUE = -1000
 TAU = 1e-3  # Soft update parameter for updating fixed q network
+
 
 class QNetwork(nn.Module):
     def __init__(self, state_size, action_size):
@@ -41,7 +43,7 @@ class ReplayBuffer:
         max_buffer_size (int): maximum size of internal memory
         device (string): device (cuda:# or cpu)
         """
-        
+
         self.memory = deque(maxlen=max_buffer_size)
         self.max_buffer_size = max_buffer_size
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "terminate"])
@@ -85,10 +87,11 @@ class ReplayBuffer:
 
         return (states, actions, rewards, next_states, terminates)
 
+
 class DDQN_torch:
-    def __init__(self, state_size, action_size, device, gamma = 0.99, max_buffer_size = 1e5,
-                 batch_size = 64, lr = 1e-3, copy_param = 4, double = False, constraint_func = None,
-                 epsilon_init = 1.0, epsilon_decay = 0.99, decay_epsilon_experience = True
+    def __init__(self, state_size, action_size, device, gamma=0.99, max_buffer_size=1e5,
+                 batch_size=64, lr=1e-3, copy_param=4, double=False, constraint_func=None,
+                 epsilon_init=1.0, epsilon_decay=0.99, decay_epsilon_experience=True
                  ):
         """
         DDQN Agent
@@ -119,7 +122,7 @@ class DDQN_torch:
         # Initilize memory
         self.replay_buffer = ReplayBuffer(max_buffer_size, device)
 
-        #Values
+        # Values
         self.batch_size = batch_size
         self.copy_param = copy_param
         self.gamma = gamma
@@ -144,7 +147,7 @@ class DDQN_torch:
             not_available_actions = []
         return available_actions, not_available_actions
 
-    def add_experience(self, state, action, reward, next_state, terminate, decay = True):
+    def add_experience(self, state, action, reward, next_state, terminate, decay=True):
         """
         Add experience to buffer
 
@@ -181,7 +184,7 @@ class DDQN_torch:
             action_values = self.train_network(next_states).detach()
         else:
             action_values = action_values_eval
-        
+
         if self.constraint_func is not None:
             x = []
             y = []
@@ -208,21 +211,22 @@ class DDQN_torch:
             self.copy_weights()
         return float(loss.detach().cpu().data)
 
-    def add_experience_train(self, state, action, reward, next_state, terminate, decay = True):
+    def add_experience_train(self, state, action, reward, next_state, terminate, decay=True):
         """
         Adds experience and train
         """
-        self.add_experience(state, action, reward, next_state, terminate, decay = True)
+        self.add_experience(state, action, reward, next_state, terminate, decay=True)
         return self.train()
 
     def copy_weights(self):
         """
         Updates the target network with the train network
         """
-        for source_parameters, target_parameters in zip(self.train_network.parameters(), self.target_network.parameters()):
+        for source_parameters, target_parameters in zip(self.train_network.parameters(),
+                                                        self.target_network.parameters()):
             target_parameters.data.copy_(TAU * source_parameters.data + (1.0 - TAU) * target_parameters.data)
 
-    def get_action(self, state, epsilon = None):
+    def get_action(self, state, epsilon=None):
         """
         Choose the action
 
@@ -320,5 +324,3 @@ class DQNLoadedPolicy:
         self.target_network.load_state_dict(torch.load(filename + '_target.pt', map_location=device))
         self.train_network.eval()
         self.target_network.eval()
-
-

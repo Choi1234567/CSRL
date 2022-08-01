@@ -1,22 +1,18 @@
 #Adapted from Rainbow tutorial of https://github.com/Curt-Park/rainbow-is-all-you-need
 
 import math
-import os
 import random
 from collections import deque
-from typing import Deque, Dict, List, Tuple
 
-import gym
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from IPython.display import clear_output
 from torch.nn.utils import clip_grad_norm_
-from copy import deepcopy
+
 from agents.segment_tree import MinSegmentTree, SumSegmentTree
+
 MINVALUE = -1000
 
 class ReplayBuffer:
