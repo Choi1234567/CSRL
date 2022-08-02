@@ -1,3 +1,5 @@
+import time
+
 import gym
 from IPython.core.display_functions import clear_output
 from matplotlib import pyplot as plt
@@ -72,7 +74,8 @@ def run_episode_experiment(env, agent, train=True, log_r=False):
             eps = EPS_MIN
         action = agent.get_action(state, eps)
         next_state, reward_unscaled, done, info = env.step(action)
-
+        env.render()  # 绘制场景
+        time.sleep(0.01)
         if log_r:
             if reward_unscaled < 1:
                 reward = -10
@@ -123,7 +126,7 @@ def run_experiment(env, agent, n_episodes=5000, log_r=False):
 
 seed = 0  # Set the random seed
 
-torch.manual_seed(seed)
+torch.manual_seed(seed=seed)
 
 device = torch.device(f'cuda:{int(0)}' if torch.cuda.is_available() else 'cpu')
 folder = '../environments_and_constraints/lunar_lander/trained_agent_files/'
@@ -131,9 +134,8 @@ state_size = 8
 action_size = 4
 
 # Make the environment
-env = gym.make('LunarLander-v2')
+env = gym.make('LunarLander-v2', render_mode='human')
 env.seed(seed)
-
 # Create the constraints
 # Load in the "human" policies that we use as constraints
 policies_dict = {key: DQNLoadedPolicy(state_size, action_size,
@@ -164,8 +166,5 @@ agent_params = {
 # agent_type selects the learner to use:
 constraint_func = constraint_func_list[0]
 epsilon_decay = epsilon_decay_list[0]
-print(constraint_func)
-print('-------')
-print(epsilon_decay)
 agent = DDQN_torch(constraint_func=constraint_func, epsilon_decay=epsilon_decay, **agent_params)
 run_experiment(env, agent, n_episodes=5000, log_r=False)
